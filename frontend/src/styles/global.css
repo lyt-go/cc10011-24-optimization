@@ -33,3 +33,24 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .link { border: none; background: none; color: var(--brand); cursor: pointer; padding: 0; }
 .page-foot { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
 .error-text { color: #b42318; }
+
+/* 用户洞察：人群批次、快照版本与追溯面板 */
+.panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin: 12px 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; }
+.panel-hint { color: var(--muted); font-size: 12px; margin: 6px 0; }
+.panel h4 { margin: 14px 0 6px; font-size: 13px; }
+.crowd-list { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.crowd-list li { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.batch-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.tag { font-style: normal; font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--border); }
+.tag.ok { background: #ecfdf3; border-color: #abefc6; color: #067647; }
+.tag.warn { background: #fffaeb; border-color: #fedf89; color: #b54708; margin-left: 6px; }
+.filter-item.checkbox { flex-direction: row; align-items: center; gap: 4px; }
+.filter-item.grow { flex: 1; }
+.filter-item.grow input { width: 100%; }
+.select-col { width: 32px; text-align: center; }
+.version-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.finding-list { margin: 0; padding-left: 18px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.finding-list p { margin: 0 0 2px; }
+.finding-list small { color: var(--muted); }
+.notice-text { color: #067647; }

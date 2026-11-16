@@ -75,5 +75,56 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 用户洞察：增量刷新与快照追溯
+
+### 数据模型
+
+| 表 | 说明 |
+| --- | --- |
+| `_insight_crowds` | 目标人群及其版本；修改定义只升版本 |
+| `_insight_batches` | 生成批次；每个批次覆盖一段日期，带 `已完成 / 进行中` 状态与计数 |
+| `_insight_snapshots` | 报告数据快照：当前版本唯一，历史版本只读保留 |
+| `_insight_scans` | 按 `(人群编号, 人群版本, 批次)` 共享的扫描缓存 |
+| `_insight_status_logs` | 每次刷新的状态记录（动作、快照版本、区间、下次生成） |
+| `_insight_deliveries` | 订阅推送消费快照的交付流水 |
+
+内部表以 `_` 开头，不参与运营概览统计，但与业务表共用 `store.transaction()`：
+快照、报告状态、扫描缓存与状态记录要么一起提交，要么整组回滚。
+
+### 三个关键取舍
+
+1. **修改人群不整份重算**：`POST /api/userinsight/crowds/{人群}/modify` 只升版本并
+   把关联报告标记为 `待刷新`，历史指标、数据区间、生成时间与下次生成时间全部保持原样。
+   之后的刷新按人群版本复用未受影响批次的扫描结果。
+2. **只读取一个连续完整数据区间**：自动刷新在"更新但断档"与"较旧但连续"之间选择后者，
+   同长度时取更晚的区间。被排除的批次会连同原因写进快照的 `区间判定`。
+   示例数据里 `CROWD-0001` 的 `BATCH-0006` 已完成但与前段隔了 2 天缺口，因此
+   `USER-0001/0002` 的区间停在 `2026-09-01 ~ 2026-09-08`。
+3. **同一业务键只有一个当前快照**：报告编号即业务键，新版本写入前旧版本降为历史版本，
+   版本号单调递增；`GET /{id}/snapshots` 保留全部历史原文。
+
+### 接口
+
+| 接口 | 说明 |
+| --- | --- |
+| `GET /api/userinsight/summary` | 报告数、待刷新数、当前快照数 |
+| `GET /api/userinsight/crowds` | 人群与其批次全景（断档、未完成一目了然） |
+| `POST /api/userinsight/{id}/refresh` | 增量刷新；可传 `batch_ids` 指定区间，不连续直接 400 |
+| `POST /api/userinsight/batch-refresh` | 一次提交多个报告，逐条返回每个批次结果 |
+| `GET /api/userinsight/{id}/snapshots/{version}` | 按版本读取历史快照 |
+| `GET /api/userinsight/{id}/trace` | 状态记录、区间判定、扫描明细与订阅交付 |
+| `POST /api/subscription/{id}/consume-insight` | 订阅消费当前快照，重复消费幂等拦下 |
+| `GET /api/subscription/{id}/deliveries` | 交付流水 |
+
+关键指标变化对比的是"上一当前快照"，仅当本期区间完整包含上一区间时才作为环比结论；
+区间缩短或错位时只展示数值并在核心发现里注明不可比。
+
+### 测试
+
+```bash
+cd backend
+.venv/bin/python -m unittest discover -s tests -t . -v
+```
+
 领域：数据工程
 子方向：数据分析与数据应用

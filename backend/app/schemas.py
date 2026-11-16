@@ -28,6 +28,27 @@ class EntryPayload(BaseModel):
     remark: str | None = None
 
 
+class InsightRefreshPayload(BaseModel):
+    """刷新一份洞察报告：可选指定批次，指定时必须组成一个连续完整区间。"""
+
+    batch_ids: list[int] = Field(default_factory=list)
+    trigger: str = "增量刷新"
+
+
+class InsightBatchRefreshPayload(BaseModel):
+    """一次提交多个报告（或同一报告的多个批次），逐条返回结果。"""
+
+    report_ids: list[int] = Field(default_factory=list)
+    batch_ids: list[int] = Field(default_factory=list)
+    trigger: str = "批量生成"
+
+
+class InsightCrowdPayload(BaseModel):
+    """修改目标人群定义；只升版本，不触发整份重算。"""
+
+    values: dict[str, Any] = Field(default_factory=dict)
+
+
 
 class RealtimemetricEntry(BaseModel):
     """指标定义明细结构。"""
